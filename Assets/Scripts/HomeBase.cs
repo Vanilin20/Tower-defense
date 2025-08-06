@@ -1,25 +1,43 @@
 using UnityEngine;
 
-public class HomeBase : MonoBehaviour
+public class HomeBase : Unit
 {
-    public int maxHealth = 100;
-    private int currentHealth;
-
-    void Start()
+    [Header("Характеристики бази")]
+    public int maxBaseHealth = 500;
+    
+    protected override void Start()
     {
+        base.Start();
+        maxHealth = maxBaseHealth;
         currentHealth = maxHealth;
+        unitName = "Домашня База";
+        
+        // База не рухається
+        moveSpeed = 0f;
     }
 
-    public void TakeDamage(int damage)
+    protected override void FindTarget()
     {
-        currentHealth -= damage;
-        Debug.Log("Базу атакують! HP: " + currentHealth);
+        // База не шукає цілі, вона тільки захищається
+        currentTarget = null;
+    }
 
-        if (currentHealth <= 0)
-        {
-            Debug.Log("Базу знищено!");
-            // додай тут Game Over або знищення
-            Destroy(gameObject);
-        }
+    protected override void HandleCombat()
+    {
+        // База не атакує, тільки отримує пошкодження
+    }
+
+    protected override void Die()
+    {
+        base.Die();
+        Debug.Log("ГЕЙМ ОВЕР! База знищена!");
+        // Тут можна додати логіку закінчення гри
+        Time.timeScale = 0f; // Зупиняємо гру
+    }
+
+    public override void TakeDamage(int damageAmount)
+    {
+        base.TakeDamage(damageAmount);
+        Debug.Log($"База під атакою! Залишилось здоров'я: {currentHealth}/{maxHealth}");
     }
 }

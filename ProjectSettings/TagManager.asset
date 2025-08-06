@@ -4,11 +4,11 @@
 TagManager:
   serializedVersion: 3
   tags:
-  - Unit
   - Enemy
   - Home
   - Zona
   - Slot
+  - Hero
   layers:
   - Default
   - TransparentFX

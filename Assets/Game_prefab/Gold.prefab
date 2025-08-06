@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2473021344074816357}
   - component: {fileID: 389568956566670809}
-  - component: {fileID: 765993450890600602}
   - component: {fileID: 8280805496579116838}
   m_Layer: 0
   m_Name: Gold
@@ -89,20 +88,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &765993450890600602
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 630616881259372401}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 480d290950c11c64c804a4986107be79, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  pickupCooldown: 0.1
-  lifetime: 30
 --- !u!58 &8280805496579116838
 CircleCollider2D:
   m_ObjectHideFlags: 0
