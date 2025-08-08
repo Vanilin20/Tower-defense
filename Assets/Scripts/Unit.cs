@@ -129,6 +129,10 @@ public abstract class Unit : MonoBehaviour
         if (isDead) return;
 
         currentHealth -= damageAmount;
+        
+        // Обмежуємо currentHealth мінімальним значенням 0
+        currentHealth = Mathf.Max(0, currentHealth);
+        
         Debug.Log($"{unitName} отримав {damageAmount} пошкоджень. HP: {currentHealth}/{maxHealth}");
 
         if (currentHealth <= 0)

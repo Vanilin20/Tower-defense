@@ -110,8 +110,8 @@ public class Card : MonoBehaviour, IPointerClickHandler
     
     private void TryPlaceInSlot()
     {
-        // Знаходимо вільний слот
-        Slot freeSlot = FindFreeSlot();
+        // Знаходимо вільний слот з пріоритетом
+        Slot freeSlot = FindFreeSlotByPriority();
         if (freeSlot != null)
         {
             // Розміщуємо карту в слоті
@@ -124,9 +124,16 @@ public class Card : MonoBehaviour, IPointerClickHandler
         }
     }
     
-    private Slot FindFreeSlot()
+    // МЕТОД 1: Пошук по пріоритету слота
+    private Slot FindFreeSlotByPriority()
     {
         Slot[] allSlots = FindObjectsByType<Slot>(FindObjectsSortMode.None);
+        
+        // Сортуємо слоти по пріоритету (менше число = вищий пріоритет)
+        System.Array.Sort(allSlots, (slot1, slot2) => 
+            slot1.GetSlotPriority().CompareTo(slot2.GetSlotPriority()));
+        
+        // Знаходимо перший вільний слот в відсортованому списку
         foreach (Slot slot in allSlots)
         {
             if (slot.IsEmpty())
@@ -136,7 +143,7 @@ public class Card : MonoBehaviour, IPointerClickHandler
         }
         return null;
     }
-    
+
     private void SelectCard()
     {
         // Скидаємо вибір з інших карт

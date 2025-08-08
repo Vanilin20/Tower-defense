@@ -1,15 +1,14 @@
 using UnityEngine;
-using System.Collections;
 
 public abstract class Hero : Unit
 {
     [SerializeField] protected float enemySearchRadius = 5f; // Радіус пошуку ворогів
+    
     private bool isInCombat = false;
     
     protected override void Start()
     {
         base.Start();
-        gameObject.tag = "Hero"; // Встановлюємо тег для героя
     }
     
     protected override void Update()
@@ -31,7 +30,7 @@ public abstract class Hero : Unit
         {
             isInCombat = false;
             currentTarget = null;
-            // Анімація зупинки руху вже обробляється в базовому HandleCombat()
+            ResetCombatAnimations();
         }
     }
     
@@ -98,9 +97,16 @@ public abstract class Hero : Unit
         Gizmos.DrawWireSphere(transform.position, enemySearchRadius);
     }
     
-    // Публічний метод для отримання інформації про героя
+    // Публічні методи
     public bool IsInCombat()
     {
         return isInCombat;
+    }
+    
+    // Метод для отримання відсотка здоров'я
+// Метод для отримання відсотка здоров'я
+    public float GetHealthPercentage()
+    {
+        return Mathf.Clamp01((float)currentHealth / (float)maxHealth);
     }
 }

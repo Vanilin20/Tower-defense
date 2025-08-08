@@ -7,10 +7,18 @@ public class Slot : MonoBehaviour, IPointerClickHandler
 {
     [Header("Слот налаштування")]
     public GameObject currentCard; // Поточна карта в слоті
+    [Header("Пріоритет слота (менше число = вищий пріоритет)")]
+    public int slotPriority = 0; // Для визначення порядку заповнення
     
     void Start()
     {
         // Початкова ініціалізація (якщо потрібна)
+        
+        // Автоматично встановлюємо пріоритет за позицією в ієрархії
+        if (slotPriority == 0)
+        {
+            slotPriority = transform.GetSiblingIndex();
+        }
     }
     
     // Для 3D об'єктів
@@ -63,7 +71,7 @@ public class Slot : MonoBehaviour, IPointerClickHandler
         card.transform.position = transform.position + Vector3.up * 0.1f;
         card.transform.SetParent(transform);
         
-        Debug.Log("Карту розміщено в слоті: " + gameObject.name);
+        Debug.Log($"Карту розміщено в слоті: {gameObject.name} (пріоритет: {slotPriority})");
     }
     
     public void RemoveCard()
@@ -100,5 +108,10 @@ public class Slot : MonoBehaviour, IPointerClickHandler
             return currentCard.GetComponent<Card>();
         }
         return null;
+    }
+    
+    public int GetSlotPriority()
+    {
+        return slotPriority;
     }
 }
