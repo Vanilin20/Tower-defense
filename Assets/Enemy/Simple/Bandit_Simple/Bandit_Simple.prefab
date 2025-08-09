@@ -161,8 +161,9 @@ MonoBehaviour:
   moveSpeed: 3
   critChance: 0.1
   critMultiplier: 2
+  heightMoveSpeed: 5
   isDead: 0
-  aggroRange: 5
+  aggroRange: 3
 --- !u!61 &3503623701138088478
 BoxCollider2D:
   m_ObjectHideFlags: 0

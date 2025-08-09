@@ -2,41 +2,29 @@ using UnityEngine;
 
 public abstract class Hero : Unit
 {
-    [SerializeField] protected float enemySearchRadius = 5f; // Радіус пошуку ворогів
+    [SerializeField] protected float enemySearchRadius = 5f;
     
     private bool isInCombat = false;
     
     protected override void Start()
     {
         base.Start();
+        gameObject.tag = "Hero"; // Встановлюємо тег для героя
     }
     
     protected override void Update()
     {
         if (isDead) return;
         
-        // Використовуємо базову логіку, але додаємо контроль стану бою
-        if (!isInCombat)
-        {
-            FindTarget();
-        }
+        // Використовуємо базову логіку з системою висот
+        base.Update();
         
-        if (currentTarget != null && !currentTarget.isDead)
-        {
-            isInCombat = true;
-            HandleCombat(); // Використовуємо базову реалізацію
-        }
-        else
-        {
-            isInCombat = false;
-            currentTarget = null;
-            ResetCombatAnimations();
-        }
+        // Оновлюємо стан бою
+        isInCombat = (currentTarget != null && !currentTarget.isDead);
     }
     
     protected override void FindTarget()
     {
-        // Шукаємо найближчого ворога в радіусі пошуку
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
         Unit closestEnemy = null;
         float closestDistance = Mathf.Infinity;
@@ -62,37 +50,53 @@ public abstract class Hero : Unit
         }
     }
     
-    // Перевизначаємо MoveTowards для додавання логіки повороту героя
+    // Перевизначаємо для 2D повороту героя
     protected override void MoveTowards(Vector3 targetPosition)
     {
-        // Викликаємо базову логіку руху та анімації
+        // Спочатку викликаємо базову логіку (яка вже враховує висоти)
         base.MoveTowards(targetPosition);
         
-        // Додаємо тільки унікальну логіку повороту для героя (2D)
+        // Додаємо логіку повороту для 2D
         Vector3 direction = (targetPosition - transform.position).normalized;
-        if (direction.x > 0)
+        if (Mathf.Abs(direction.x) > 0.1f) // Перевіряємо чи є значущий рух по X
         {
-            transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+            if (direction.x > 0)
+            {
+                transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+            }
+            else if (direction.x < 0)
+            {
+                transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+            }
         }
-        else if (direction.x < 0)
-        {
-            transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
-        }
+    }
+    
+    // Перевизначаємо логіку переходу на спільну висоту для героїв
+    protected override bool ShouldMoveToCommonHeight()
+    {
+        if (currentTarget == null) return false;
+        
+        float heightDiff = Mathf.Abs(transform.position.y - currentTarget.transform.position.y);
+        float horizontalDistance = Vector3.Distance(
+            new Vector3(transform.position.x, 0, transform.position.z),
+            new Vector3(currentTarget.transform.position.x, 0, currentTarget.transform.position.z)
+        );
+        
+        // Герой переходить на висоту ворога якщо той в радіусі пошуку
+        return heightDiff > HeightManager.Instance.heightTolerance && horizontalDistance <= enemySearchRadius;
     }
     
     protected override void Die()
     {
-        base.Die(); // Використовуємо базову логіку смерті
-        
-        // Додаткова логіка для смерті героя
-        Debug.Log($"Герой {unitName} загинув");
+        base.Die();
+        Debug.Log($"Герой {unitName} героїчно загинув!");
     }
     
     protected override void OnDrawGizmosSelected()
     {
-        base.OnDrawGizmosSelected(); // Показуємо радіус атаки з базового класу
+        base.OnDrawGizmosSelected();
         
-        // Додаємо радіус пошуку ворогів
+        // Показуємо радіус пошуку ворогів
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(transform.position, enemySearchRadius);
     }
@@ -103,10 +107,15 @@ public abstract class Hero : Unit
         return isInCombat;
     }
     
-    // Метод для отримання відсотка здоров'я
-// Метод для отримання відсотка здоров'я
     public float GetHealthPercentage()
     {
         return Mathf.Clamp01((float)currentHealth / (float)maxHealth);
     }
+    
+    // Метод для примусового переходу на певну висоту (для геймплейних механік)
+    public void ForceHeightChange(float newHeight)
+    {
+        MoveToHeight(newHeight);
+    }
 }
+
