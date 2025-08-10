@@ -2,6 +2,7 @@ using UnityEngine;
 
 public abstract class Hero : Unit
 {
+    [Header("Характеристики героя")]
     [SerializeField] protected float enemySearchRadius = 5f;
     
     private bool isInCombat = false;
@@ -11,6 +12,13 @@ public abstract class Hero : Unit
         base.Start();
         gameObject.tag = "Hero"; // Встановлюємо тег для героя
     }
+
+// Енум для типів героїв (опціонально)
+public enum HeroType
+{
+    Melee,
+    Ranged,
+}
     
     protected override void Update()
     {
@@ -43,11 +51,6 @@ public abstract class Hero : Unit
         }
         
         currentTarget = closestEnemy;
-        
-        if (currentTarget != null)
-        {
-            Debug.Log($"{unitName} знайшов ворога: {currentTarget.unitName}");
-        }
     }
     
     // Перевизначаємо для 2D повороту героя
@@ -81,7 +84,7 @@ public abstract class Hero : Unit
             new Vector3(transform.position.x, 0, transform.position.z),
             new Vector3(currentTarget.transform.position.x, 0, currentTarget.transform.position.z)
         );
-        
+
         // Герой переходить на висоту ворога якщо той в радіусі пошуку
         return heightDiff > HeightManager.Instance.heightTolerance && horizontalDistance <= enemySearchRadius;
     }
@@ -89,7 +92,6 @@ public abstract class Hero : Unit
     protected override void Die()
     {
         base.Die();
-        Debug.Log($"Герой {unitName} героїчно загинув!");
     }
     
     protected override void OnDrawGizmosSelected()
@@ -117,5 +119,15 @@ public abstract class Hero : Unit
     {
         MoveToHeight(newHeight);
     }
+    
+    // Віртуальні методи для спеціальних здібностей (можуть перевизначатися в підкласах)
+    public virtual void UseSpecialAbility()
+    {
+        Debug.Log($"{unitName} використовує спеціальну здібність!");
+    }
+    
+    public virtual bool CanUseSpecialAbility()
+    {
+        return !isDead && !isRepositioning;
+    }
 }
-

@@ -2436,6 +2436,10 @@ PrefabInstance:
       propertyPath: isInSlot
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5681436960271240500, guid: db296e0f986ed1c4cb59ba5012f406a5, type: 3}
+      propertyPath: heroPrefab
+      value: 
+      objectReference: {fileID: 2962979330675658648, guid: 323ed258884580842b563d330c2184f7, type: 3}
     - target: {fileID: 6482131700972407142, guid: db296e0f986ed1c4cb59ba5012f406a5, type: 3}
       propertyPath: m_Name
       value: Card
