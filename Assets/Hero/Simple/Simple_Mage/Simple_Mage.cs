@@ -26,7 +26,6 @@ public class Simple_Mage : RangedHero
 
     protected override void Die()
     {
-        Debug.Log($"Маг {unitName} загинув!");
-        base.Die();
+        DeathHandler.HandleDeath(this, $"Маг {unitName} загинув!");
     }
 }

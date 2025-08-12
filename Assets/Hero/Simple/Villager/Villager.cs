@@ -18,7 +18,6 @@ public class Villager : MeleeHero
 
     protected override void Die()
     {
-        Debug.Log($"Селянин {unitName} загинув!");
-        base.Die();
+        DeathHandler.HandleDeath(this, $"Селянин {unitName} загинув!");
     }
 }

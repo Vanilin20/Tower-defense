@@ -25,35 +25,13 @@ public abstract class Enemy : Unit
     protected override void FindTarget()
     {
         // Спочатку шукаємо героїв в радіусі агро
-        GameObject[] heroes = GameObject.FindGameObjectsWithTag("Hero");
-        Unit closestHero = null;
-        float closestDistance = Mathf.Infinity;
+        Unit closestHero = CombatUtils.FindClosestTarget(transform.position, "Hero", aggroRange);
         Unit currentlyFightingHero = null; // Герой який вже б'ється з іншими ворогами
 
-        foreach (GameObject heroObj in heroes)
+        // Перевіряємо чи є герой в бою з іншими ворогами
+        if (closestHero != null)
         {
-            Unit hero = heroObj.GetComponent<Unit>();
-            if (hero == null || hero.isDead) continue;
-
-            float distance = Vector3.Distance(transform.position, hero.transform.position);
-            
-            if (distance <= aggroRange)
-            {
-                // Перевіряємо чи цей герой вже б'ється з іншими ворогами
-                bool heroInCombat = IsHeroInCombatWithEnemies(hero);
-                
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestHero = hero;
-                }
-                
-                // Пріоритет героям які вже в бою (для групових атак)
-                if (heroInCombat && currentlyFightingHero == null)
-                {
-                    currentlyFightingHero = hero;
-                }
-            }
+            currentlyFightingHero = IsHeroInCombatWithEnemies(closestHero) ? closestHero : null;
         }
 
         // Вибираємо ціль: пріоритет героям в бою, потім найближчому
@@ -143,16 +121,15 @@ public abstract class Enemy : Unit
     {
         if (movingToBase) return false; // Не переходимо на спільну висоту при русі до бази
         
-        if (currentTarget == null) return false;
+        if (!CombatUtils.ShouldMoveToCommonHeight(this, currentTarget)) return false;
         
-        float heightDiff = Mathf.Abs(transform.position.y - currentTarget.transform.position.y);
         float horizontalDistance = Vector3.Distance(
             new Vector3(transform.position.x, 0, transform.position.z),
             new Vector3(currentTarget.transform.position.x, 0, currentTarget.transform.position.z)
         );
         
         // Ворог переходить на висоту героя якщо той в радіусі агро
-        return heightDiff > HeightManager.Instance.heightTolerance && horizontalDistance <= aggroRange;
+        return horizontalDistance <= aggroRange;
     }
     
     // Спеціальна логіка позиціонування для ворогів
@@ -165,8 +142,7 @@ public abstract class Enemy : Unit
 
     protected override void Die()
     {
-        base.Die();
-        Debug.Log($"Ворог {unitName} знищений! Можна отримати винагороду.");
+        DeathHandler.HandleDeath(this, $"Ворог {unitName} знищений! Можна отримати винагороду.");
         
         // Тут можна додати логіку винагороди
         // GameManager.Instance?.AddGold(goldReward);

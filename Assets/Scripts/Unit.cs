@@ -19,8 +19,8 @@ public abstract class Unit : MonoBehaviour
     
     public bool isDead = false;
     protected float lastAttackTime = 0f;
-    protected Animator animator;
-    protected Unit currentTarget;
+    public Animator animator;
+    public Unit currentTarget;
     
     // Змінні для системи висот
     protected bool isMovingToHeight = false;
@@ -32,6 +32,9 @@ public abstract class Unit : MonoBehaviour
     {
         currentHealth = maxHealth;
         animator = GetComponent<Animator>();
+        
+        // Встановлюємо початковий напрямок спрайта
+        SpriteRotationUtils.SetInitialDirection(transform, gameObject.CompareTag("Hero"));
         
         // Переміщуємо юніт на найближчу доступну висоту при створенні
         // ТІЛЬКИ якщо це НЕ статичний об'єкт
@@ -86,17 +89,7 @@ public abstract class Unit : MonoBehaviour
     // Перевіряє чи потрібно переміщуватися на спільну висоту
     protected virtual bool ShouldMoveToCommonHeight()
     {
-        // Статичні об'єкти ніколи не переміщуються
-        if (isStaticUnit) return false;
-        
-        if (currentTarget == null) return false;
-        
-        float heightDiff = Mathf.Abs(transform.position.y - currentTarget.transform.position.y);
-        
-        if (heightDiff <= HeightManager.Instance.heightTolerance)
-        {
-            return false; // Вже на одній висоті
-        }
+        if (!CombatUtils.ShouldMoveToCommonHeight(this, currentTarget, isStaticUnit)) return false;
         
         // Перевіряємо чи ціль теж не переміщується до нас (щоб уникнути циклу)
         if (IsTargetMovingToMyHeight())
@@ -168,14 +161,12 @@ public abstract class Unit : MonoBehaviour
             Vector3 direction = (targetPos - transform.position).normalized;
             transform.position += direction * moveSpeed * Time.deltaTime;
             
-            if (animator != null)
-                animator.SetBool("isRunning", true);
+                    AnimationUtils.SetRunning(this, true);
         }
         else
         {
             isRepositioning = false;
-            if (animator != null)
-                animator.SetBool("isRunning", false);
+            AnimationUtils.SetRunning(this, false);
         }
     }
 
@@ -196,10 +187,7 @@ public abstract class Unit : MonoBehaviour
         
         transform.position = new Vector3(transform.position.x, newY, transform.position.z);
         
-        if (animator != null)
-        {
-            animator.SetBool("isRunning", isMovingToHeight);
-        }
+        AnimationUtils.SetRunning(this, isMovingToHeight);
     }
 
     protected virtual void HandleCombat()
@@ -214,8 +202,7 @@ public abstract class Unit : MonoBehaviour
 
         if (distanceToTarget <= attackRange)
         {
-            if (animator != null)
-                animator.SetBool("isRunning", false);
+                    AnimationUtils.SetRunning(this, false);
 
             if (Time.time - lastAttackTime >= 1f / attackSpeed)
             {
@@ -231,51 +218,20 @@ public abstract class Unit : MonoBehaviour
 
     protected virtual void MoveTowards(Vector3 targetPosition)
     {
-        // Рухаємося тільки по X та Z, висота вже встановлена
-        Vector3 direction = new Vector3(
-            targetPosition.x - transform.position.x, 
-            0, 
-            targetPosition.z - transform.position.z
-        ).normalized;
-        
-        Vector3 newPosition = transform.position + direction * moveSpeed * Time.deltaTime;
-        newPosition.y = transform.position.y; // Зберігаємо поточну висоту
-        
-        transform.position = newPosition;
-
-        if (animator != null)
-            animator.SetBool("isRunning", true);
+        CombatUtils.MoveTowardsTarget(this, targetPosition, moveSpeed);
     }
 
     protected virtual void Attack(Unit target)
     {
         if (target == null || target.isDead) return;
 
-        bool isCritical = Random.Range(0f, 1f) < critChance;
-        int finalDamage = isCritical ? Mathf.RoundToInt(damage * critMultiplier) : damage;
-
-        if (isCritical)
-        {
-            Debug.Log($"{unitName} завдає критичний удар {target.unitName} на {finalDamage} пошкоджень!");
-        }
-        else
-        {
-            Debug.Log($"{unitName} атакує {target.unitName} на {finalDamage} пошкоджень!");
-        }
-
-        if (animator != null)
-            animator.SetTrigger("isAttacking");
-
-        target.TakeDamage(finalDamage);
+        int finalDamage = CombatUtils.CalculateDamage(damage, critChance, critMultiplier, out bool isCritical);
+        CombatUtils.PerformAttack(this, target, finalDamage, isCritical);
     }
 
     protected virtual void ResetCombatAnimations()
     {
-        if (animator != null)
-        {
-            animator.SetBool("isRunning", false);
-            animator.ResetTrigger("isAttacking");
-        }
+        AnimationUtils.ResetCombatAnimations(this);
     }
 
     public virtual void TakeDamage(int damageAmount)
@@ -287,6 +243,9 @@ public abstract class Unit : MonoBehaviour
         
         Debug.Log($"{unitName} отримав {damageAmount} пошкоджень. HP: {currentHealth}/{maxHealth}");
 
+        // Якщо герой атакований під час руху до зони, не зупиняємо рух
+        // ZoneMovement сам керує своєю поведінкою
+
         if (currentHealth <= 0)
         {
             Die();
@@ -295,18 +254,7 @@ public abstract class Unit : MonoBehaviour
 
     protected virtual void Die()
     {
-        isDead = true;
-        Debug.Log($"{unitName} загинув!");
-
-        ResetCombatAnimations();
-
-        if (animator != null)
-            animator.SetTrigger("isDead");
-
-        Collider col = GetComponent<Collider>();
-        if (col != null) col.enabled = false;
-
-        Destroy(gameObject, 3f);
+        DeathHandler.HandleDeath(this);
     }
 
     // Публічні методи для роботи з висотами

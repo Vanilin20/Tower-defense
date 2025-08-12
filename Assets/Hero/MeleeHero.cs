@@ -51,22 +51,8 @@ public class MeleeHero : Hero
 
     private void PerformSingleAttack(Unit target)
     {
-        bool isCritical = Random.Range(0f, 1f) < critChance;
-        int finalDamage = isCritical ? Mathf.RoundToInt(damage * critMultiplier) : damage;
-
-        if (isCritical)
-        {
-            Debug.Log($"{unitName} завдає критичний удар {target.unitName} на {finalDamage} пошкоджень!");
-        }
-        else
-        {
-            Debug.Log($"{unitName} атакує {target.unitName} на {finalDamage} пошкоджень!");
-        }
-
-        if (animator != null)
-            animator.SetTrigger("isAttacking");
-
-        target.TakeDamage(finalDamage);
+        int finalDamage = CombatUtils.CalculateDamage(damage, critChance, critMultiplier, out bool isCritical);
+        CombatUtils.PerformAttack(this, target, finalDamage, isCritical);
     }
 
     private void StartComboAttack(Unit target)
@@ -113,8 +99,7 @@ public class MeleeHero : Hero
 
         Debug.Log($"{unitName} комбо удар {currentComboHit}/{comboHits} - {finalDamage} пошкоджень!");
 
-        if (animator != null)
-            animator.SetTrigger("isAttacking");
+        AnimationUtils.TriggerAttack(this);
 
         currentTarget.TakeDamage(finalDamage);
 
@@ -162,7 +147,7 @@ public class MeleeHero : Hero
             EndComboAttack();
         }
         
-        base.Die();
+        DeathHandler.HandleDeath(this);
     }
 
     // Візуалізація для налагодження

@@ -86,22 +86,10 @@ public class RangedHero : Hero
 
     private void PerformMeleeAttack(Unit target)
     {
-        bool isCritical = Random.Range(0f, 1f) < critChance;
-        int finalDamage = isCritical ? Mathf.RoundToInt(meleeDamage * critMultiplier) : meleeDamage;
-
-        if (isCritical)
-        {
-            Debug.Log($"{unitName} завдає критичний удар в ближньому бою {target.unitName} на {finalDamage} пошкоджень!");
-        }
-        else
-        {
-            Debug.Log($"{unitName} атакує в ближньому бою {target.unitName} на {finalDamage} пошкоджень!");
-        }
-
-        if (animator != null)
-            animator.SetTrigger("isMeleeAttacking");
-
-        target.TakeDamage(finalDamage);
+        int finalDamage = CombatUtils.CalculateDamage(meleeDamage, critChance, critMultiplier, out bool isCritical);
+        CombatUtils.PerformAttack(this, target, finalDamage, isCritical, "атакує в ближньому бою");
+        
+        AnimationUtils.TriggerMeleeAttack(animator);
     }
 
     private void PerformRangedAttack(Unit target)
@@ -138,29 +126,16 @@ public class RangedHero : Hero
             Debug.Log($"{unitName} стріляє в {target.unitName} на {finalDamage} пошкоджень!");
         }
 
-        if (animator != null)
-            animator.SetTrigger("isRangedAttacking");
+        AnimationUtils.TriggerRangedAttack(animator);
     }
 
     private void PerformInstantRangedAttack(Unit target)
     {
         // Запасний варіант якщо немає префабу снаряду
-        bool isCritical = Random.Range(0f, 1f) < critChance;
-        int finalDamage = isCritical ? Mathf.RoundToInt(damage * critMultiplier) : damage;
-
-        if (isCritical)
-        {
-            Debug.Log($"{unitName} завдає критичний дальній удар {target.unitName} на {finalDamage} пошкоджень!");
-        }
-        else
-        {
-            Debug.Log($"{unitName} завдає дальній удар {target.unitName} на {finalDamage} пошкоджень!");
-        }
-
-        if (animator != null)
-            animator.SetTrigger("isRangedAttacking");
-
-        target.TakeDamage(finalDamage);
+        int finalDamage = CombatUtils.CalculateDamage(damage, critChance, critMultiplier, out bool isCritical);
+        CombatUtils.PerformAttack(this, target, finalDamage, isCritical, "завдає дальній удар");
+        
+        AnimationUtils.TriggerRangedAttack(animator);
     }
 
     // Спеціальна логіка руху для дальнього бою
@@ -187,8 +162,7 @@ public class RangedHero : Hero
             // Ближній бій - стандартна логіка
             if (distanceToTarget <= meleeRange)
             {
-                if (animator != null)
-                    animator.SetBool("isRunning", false);
+                AnimationUtils.SetRunning(this, false);
 
                 if (Time.time - lastAttackTime >= 1f / attackSpeed)
                 {
@@ -206,8 +180,7 @@ public class RangedHero : Hero
             // Дальній бій
             if (distanceToTarget <= attackRange)
             {
-                if (animator != null)
-                    animator.SetBool("isRunning", false);
+                AnimationUtils.SetRunning(this, false);
 
                 if (Time.time - lastAttackTime >= 1f / attackSpeed)
                 {

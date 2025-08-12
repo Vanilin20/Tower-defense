@@ -33,45 +33,14 @@ public enum HeroType
     
     protected override void FindTarget()
     {
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        Unit closestEnemy = null;
-        float closestDistance = Mathf.Infinity;
-        
-        foreach (GameObject enemyObj in enemies)
-        {
-            Unit enemy = enemyObj.GetComponent<Unit>();
-            if (enemy == null || enemy.isDead) continue;
-            
-            float distance = Vector3.Distance(transform.position, enemy.transform.position);
-            if (distance < closestDistance && distance <= enemySearchRadius)
-            {
-                closestDistance = distance;
-                closestEnemy = enemy;
-            }
-        }
-        
-        currentTarget = closestEnemy;
+        currentTarget = CombatUtils.FindClosestTarget(transform.position, "Enemy", enemySearchRadius);
     }
     
     // Перевизначаємо для 2D повороту героя
     protected override void MoveTowards(Vector3 targetPosition)
     {
-        // Спочатку викликаємо базову логіку (яка вже враховує висоти)
+        // Спочатку викликаємо базову логіку (яка вже враховує висоти та поворот спрайта)
         base.MoveTowards(targetPosition);
-        
-        // Додаємо логіку повороту для 2D
-        Vector3 direction = (targetPosition - transform.position).normalized;
-        if (Mathf.Abs(direction.x) > 0.1f) // Перевіряємо чи є значущий рух по X
-        {
-            if (direction.x > 0)
-            {
-                transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
-            }
-            else if (direction.x < 0)
-            {
-                transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
-            }
-        }
     }
     
     // Перевизначаємо логіку переходу на спільну висоту для героїв
@@ -79,14 +48,15 @@ public enum HeroType
     {
         if (currentTarget == null) return false;
         
-        float heightDiff = Mathf.Abs(transform.position.y - currentTarget.transform.position.y);
+        if (!CombatUtils.ShouldMoveToCommonHeight(this, currentTarget)) return false;
+        
         float horizontalDistance = Vector3.Distance(
             new Vector3(transform.position.x, 0, transform.position.z),
             new Vector3(currentTarget.transform.position.x, 0, currentTarget.transform.position.z)
         );
 
         // Герой переходить на висоту ворога якщо той в радіусі пошуку
-        return heightDiff > HeightManager.Instance.heightTolerance && horizontalDistance <= enemySearchRadius;
+        return horizontalDistance <= enemySearchRadius;
     }
     
     protected override void Die()

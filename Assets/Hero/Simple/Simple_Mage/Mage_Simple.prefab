@@ -46,7 +46,7 @@ GameObject:
   - component: {fileID: 2662515226899230126}
   m_Layer: 0
   m_Name: Mage_Simple
-  m_TagString: Untagged
+  m_TagString: Hero
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -214,7 +214,7 @@ MonoBehaviour:
   damage: 50
   attackRange: 6
   attackSpeed: 1
-  moveSpeed: 3
+  moveSpeed: 2
   critChance: 0.1
   critMultiplier: 2
   heightMoveSpeed: 5

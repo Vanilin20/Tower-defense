@@ -9,6 +9,7 @@ TagManager:
   - Zona
   - Slot
   - Hero
+  - HeroSpawnPoint
   layers:
   - Default
   - TransparentFX

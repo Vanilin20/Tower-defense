@@ -6,16 +6,45 @@ using UnityEngine.EventSystems;
 public class Zone : MonoBehaviour, IPointerClickHandler
 {
     [Header("Зона налаштування")]
-    public Transform spawnPoint;         // Точка спавну героя (якщо null — буде позиція зони)
-    public bool hasHero = false;         // Чи є герой у зоні
-    public GameObject currentHero;       // Поточний герой у зоні
+    public static Transform globalSpawnPoint; // Глобальна точка спавну для всіх героїв
+    public bool hasHero = false;              // Чи є герой у зоні
+    public GameObject currentHero;            // Поточний герой у зоні
 
     void Start()
     {
-        // Якщо spawnPoint не заданий вручну — використовуємо позицію самої зони
-        if (spawnPoint == null)
+        // Знаходимо глобальну точку спавну, якщо вона ще не встановлена
+        if (globalSpawnPoint == null)
         {
-            spawnPoint = transform;
+            GameObject spawnObject = GameObject.FindGameObjectWithTag("HeroSpawnPoint");
+            if (spawnObject != null)
+            {
+                globalSpawnPoint = spawnObject.transform;
+                Debug.Log("🎯 Знайдено глобальну точку спавну: " + spawnObject.name);
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ Не знайдено об'єкт з тегом 'HeroSpawnPoint'! Створіть GameObject з цим тегом для точки спавну героїв.");
+            }
+        }
+        
+        // Підписуємося на подію смерті героя
+        DeathHandler.OnHeroDeath += OnHeroDeath;
+    }
+    
+    void OnDestroy()
+    {
+        // Відписуємося від події при знищенні зони
+        DeathHandler.OnHeroDeath -= OnHeroDeath;
+    }
+    
+    // Обробник смерті героя
+    private void OnHeroDeath(Unit deadHero)
+    {
+        // Перевіряємо чи це наш герой
+        if (currentHero != null && currentHero == deadHero.gameObject)
+        {
+            Debug.Log($"💀 Герой {deadHero.unitName} помер, звільняємо зону {gameObject.name}");
+            RemoveHero();
         }
     }
 
@@ -41,7 +70,23 @@ public class Zone : MonoBehaviour, IPointerClickHandler
     {
         if (hasHero)
         {
-            Debug.Log("⚠️ В зоні вже є герой");
+            // Перевіряємо чи герой ще живий
+            if (IsHeroAlive())
+            {
+                Debug.Log("⚠️ В зоні вже є живий герой");
+                return;
+            }
+            else
+            {
+                // Герой помер, звільняємо зону
+                Debug.Log("💀 Герой в зоні помер, звільняємо зону");
+                RemoveHero();
+            }
+        }
+
+        if (globalSpawnPoint == null)
+        {
+            Debug.LogError("❌ Не встановлена глобальна точка спавну! Створіть GameObject з тегом 'HeroSpawnPoint'");
             return;
         }
 
@@ -61,7 +106,7 @@ public class Zone : MonoBehaviour, IPointerClickHandler
 
         Debug.Log($"🟢 Спавнимо героя з карти: {selectedCard.gameObject.name}");
 
-        SpawnHero(heroPrefab);
+        SpawnHeroAndMoveToZone(heroPrefab);
         selectedCard.DeselectCard(); // Після спавну — скидаємо вибір
     }
 
@@ -86,22 +131,68 @@ public class Zone : MonoBehaviour, IPointerClickHandler
         return null;
     }
 
-    private void SpawnHero(GameObject heroPrefab)
+    private void SpawnHeroAndMoveToZone(GameObject heroPrefab)
     {
-        Vector3 spawnPosition = spawnPoint.position;
-        Quaternion spawnRotation = spawnPoint.rotation;
+        // Спавнимо героя в глобальній точці спавну
+        Vector3 spawnPosition = globalSpawnPoint.position;
+        Quaternion spawnRotation = globalSpawnPoint.rotation;
 
         currentHero = Instantiate(heroPrefab, spawnPosition, spawnRotation);
         hasHero = true;
 
-        Debug.Log("🧍 Герой заспавнено в зоні: " + gameObject.name);
+        // Отримуємо компонент Hero та налаштовуємо його цільову позицію
+        Hero heroComponent = currentHero.GetComponent<Hero>();
+        if (heroComponent != null)
+        {
+            // Додаємо компонент ZoneMovement для керування рухом до зони
+            ZoneMovement movement = currentHero.AddComponent<ZoneMovement>();
+            movement.Initialize(transform.position, this);
+        }
+        else
+        {
+            Debug.LogError("❌ У префабі героя немає компонента Hero!");
+        }
+
+        Debug.Log($"🧍 Герой заспавнено в точці спавну і рухається до зони: {gameObject.name}");
+    }
+
+    // Викликається коли герой досягає зони
+    public void OnHeroReachedZone(GameObject hero)
+    {
+        Debug.Log($"✅ Герой {hero.name} досягнув зони {gameObject.name}");
+        
+        // Додаємо відстеження смерті героя
+        StartCoroutine(MonitorHeroDeath(hero));
+    }
+    
+    // Відстежує смерть героя і звільняє зону
+    private System.Collections.IEnumerator MonitorHeroDeath(GameObject hero)
+    {
+        while (hero != null && !hero.GetComponent<Unit>().isDead)
+        {
+            yield return new WaitForSeconds(0.5f); // Перевіряємо кожні 0.5 секунди
+        }
+        
+        // Якщо герой помер або був знищений
+        if (hero == null || (hero.GetComponent<Unit>() != null && hero.GetComponent<Unit>().isDead))
+        {
+            Debug.Log($"💀 Герой {hero?.name ?? "невідомий"} помер, звільняємо зону {gameObject.name}");
+            RemoveHero();
+        }
     }
 
     public void RemoveHero()
     {
         if (currentHero != null)
         {
-            Destroy(currentHero);
+            // Зупиняємо відстеження смерті
+            StopAllCoroutines();
+            
+            // Знищуємо героя якщо він ще існує
+            if (currentHero != null)
+            {
+                Destroy(currentHero);
+            }
         }
 
         currentHero = null;
@@ -118,5 +209,31 @@ public class Zone : MonoBehaviour, IPointerClickHandler
     public GameObject GetCurrentHero()
     {
         return currentHero;
+    }
+    
+    // Перевіряє чи герой ще живий
+    public bool IsHeroAlive()
+    {
+        if (currentHero == null) return false;
+        
+        Unit heroUnit = currentHero.GetComponent<Unit>();
+        return heroUnit != null && !heroUnit.isDead;
+    }
+    
+    // Примусово звільняє зону (наприклад, якщо герой застряг)
+    public void ForceFreeZone()
+    {
+        if (hasHero)
+        {
+            Debug.Log($"🔄 Примусово звільняємо зону {gameObject.name}");
+            RemoveHero();
+        }
+    }
+
+    // Метод для встановлення глобальної точки спавну (можна викликати з інших скриптів)
+    public static void SetGlobalSpawnPoint(Transform spawnPoint)
+    {
+        globalSpawnPoint = spawnPoint;
+        Debug.Log("🎯 Встановлено нову глобальну точку спавну: " + spawnPoint.name);
     }
 }

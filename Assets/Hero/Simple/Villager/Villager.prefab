@@ -111,8 +111,16 @@ MonoBehaviour:
   moveSpeed: 3
   critChance: 0.1
   critMultiplier: 2
+  heightMoveSpeed: 5
+  isStaticUnit: 0
   isDead: 0
+  animator: {fileID: 0}
+  currentTarget: {fileID: 0}
+  isRepositioning: 0
   enemySearchRadius: 5
+  meleeComboChance: 0.3
+  comboHits: 2
+  comboDelay: 0.3
 --- !u!61 &1270820993388896522
 BoxCollider2D:
   m_ObjectHideFlags: 0
