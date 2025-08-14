@@ -183,6 +183,14 @@ public class ZoneMovement : MonoBehaviour
             targetZone.OnHeroReachedZone(gameObject);
         }
 
+        // Сповіщаємо HeroController про досягнення зони
+        HeroController heroController = GetComponent<HeroController>();
+        if (heroController != null)
+        {
+            // HeroController тепер знає, що герой досягнув зони
+            // і може активувати кнопки
+        }
+
         Debug.Log($"🛡️ {gameObject.name} готовий до бою в зоні!");
 
         // Видаляємо цей компонент, оскільки рух завершено

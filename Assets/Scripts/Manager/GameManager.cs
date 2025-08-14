@@ -21,6 +21,12 @@ public class GameManager : MonoBehaviour
     public float moveDuration = 1f;         // Скільки часу триває переміщення
 
     public static GameManager Instance;
+    
+    // Подія вибору героя
+    public static System.Action<GameObject> OnHeroSelected;
+    
+    // Статична змінна для зберігання поточного вибраного героя
+    private static GameObject currentSelectedHero;
 
     void Awake()
     {
@@ -111,4 +117,17 @@ public class GameManager : MonoBehaviour
 
     public bool IsPrepareMode() => isPrepareMode;
     public bool IsGameMode() => !isPrepareMode;
+    
+    // Статичний метод для виклику події вибору героя
+    public static void SelectHero(GameObject hero)
+    {
+        currentSelectedHero = hero;
+        OnHeroSelected?.Invoke(hero);
+    }
+    
+    // Статичний метод для отримання поточного вибраного героя
+    public static GameObject GetSelectedHero()
+    {
+        return currentSelectedHero;
+    }
 }

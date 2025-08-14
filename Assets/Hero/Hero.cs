@@ -1,6 +1,7 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
-public abstract class Hero : Unit
+public abstract class Hero : Unit, IPointerClickHandler
 {
     [Header("Характеристики героя")]
     [SerializeField] protected float enemySearchRadius = 5f;
@@ -99,5 +100,20 @@ public enum HeroType
     public virtual bool CanUseSpecialAbility()
     {
         return !isDead && !isRepositioning;
+    }
+    
+    // Обробник кліку по герою
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        // Викликаємо подію вибору героя
+        GameManager.SelectHero(gameObject);
+        Debug.Log($"🎯 Клікнуто по герою: {unitName}");
+        
+        // НОВЕ: Активуємо UI панель після кліку
+        HeroController heroController = GetComponent<HeroController>();
+        if (heroController != null)
+        {
+            heroController.ActivateControlPanel();
+        }
     }
 }

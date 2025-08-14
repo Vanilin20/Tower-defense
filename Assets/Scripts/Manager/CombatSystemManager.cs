@@ -32,18 +32,11 @@ public class CombatSystemManager : MonoBehaviour
         if (HeightManager.Instance == null)
         {
             Debug.LogWarning("⚠️ HeightManager не знайдено! Створюємо автоматично...");
-            CreateHeightManager();
         }
         
         Debug.Log("✅ Бойова система ініціалізована!");
     }
     
-    private void CreateHeightManager()
-    {
-        GameObject heightManagerObj = new GameObject("HeightManager");
-        heightManagerObj.AddComponent<HeightManager>();
-        DontDestroyOnLoad(heightManagerObj);
-    }
     
     // Публічні методи для керування системою
     public void EnableCombatUtils(bool enable)

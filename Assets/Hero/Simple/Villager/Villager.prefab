@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5831987903559350261}
   - component: {fileID: -5042345059220685925}
   - component: {fileID: 1270820993388896522}
+  - component: {fileID: 3781215066615771044}
   m_Layer: 0
   m_Name: Villager
   m_TagString: Hero
@@ -167,6 +168,22 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &3781215066615771044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3333227701121918898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cad57eca6e947c429cbf1d5b06f6b07, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  returnToSpawnButton: {fileID: 8434611260459183951, guid: aa5163cc411cdef45baf342ac07ecfa5, type: 3}
+  returnToZoneButton: {fileID: 7273681958878724646, guid: 884c11591790afb4e9172e1da6c09219, type: 3}
+  stopDistance: 0.1
+  heroControlPanel: {fileID: 7560177176432246614, guid: f51057572d304ad44a21b07611b20738, type: 3}
 --- !u!1001 &510003973702872587
 PrefabInstance:
   m_ObjectHideFlags: 0
